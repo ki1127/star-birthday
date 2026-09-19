@@ -10,10 +10,11 @@ interface CameraProps {
 export default function Camera({ onBack }: CameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const starCanvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [started, setStarted] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState(false);
-  const [frameError] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const animRef = useRef<number>(0);
 
   // Star overlay animation on video
@@ -59,54 +60,109 @@ export default function Camera({ onBack }: CameraProps) {
       }
 
       // Star frame overlay
-      if (!frameError) {
-        ctx.strokeStyle = 'rgba(255, 217, 102, 0.3)';
-        ctx.lineWidth = 2;
-        const margin = 20;
-        ctx.beginPath();
-        ctx.roundRect(margin, margin, w - margin * 2, h - margin * 2, 12);
-        ctx.stroke();
-      }
+      ctx.strokeStyle = 'rgba(255, 217, 102, 0.3)';
+      ctx.lineWidth = 2;
+      const margin = 20;
+      ctx.beginPath();
+      ctx.roundRect(margin, margin, w - margin * 2, h - margin * 2, 12);
+      ctx.stroke();
 
       animRef.current = requestAnimationFrame(draw);
     };
     draw();
     return () => cancelAnimationFrame(animRef.current);
-  }, [started, frameError]);
+  }, [started]);
+
+  // Cleanup stream on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
 
   const startCamera = async () => {
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      setError('');
+      // Request camera with front-facing preference on mobile
+      const constraints: MediaStreamConstraints = {
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user',
+        },
+        audio: false,
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
       setStarted(true);
+
       if (videoRef.current) {
-        videoRef.current.srcObject = s;
-        await videoRef.current.play();
+        videoRef.current.srcObject = stream;
+        // Wait for video metadata to ensure dimensions are available
+        await new Promise<void>((resolve) => {
+          if (!videoRef.current) { resolve(); return; }
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current?.play().then(() => {
+              setCameraReady(true);
+              resolve();
+            }).catch(() => {
+              // Some browsers block autoplay — try muted
+              if (videoRef.current) videoRef.current.muted = true;
+              videoRef.current?.play().then(() => {
+                setCameraReady(true);
+              }).catch(() => {
+                setCameraReady(true); // Show anyway
+              });
+              resolve();
+            });
+          };
+        });
       }
-    } catch (err: any) {
-      setError(err.message || '无法访问摄像头');
-      setStarted(true); // Show the downgraded view
+    } catch (err: unknown) {
+      const msg = err instanceof DOMException ? err.message : String(err);
+      if (msg.includes('NotAllowed') || msg.includes('Permission')) {
+        setError('摄像头权限被拒绝，请在浏览器设置中允许访问摄像头');
+      } else if (msg.includes('NotFound') || msg.includes('Devices')) {
+        setError('未检测到摄像头设备');
+      } else if (msg.includes('NotReadable')) {
+        setError('摄像头被其他应用占用');
+      } else {
+        setError(`摄像头不可用: ${msg}`);
+      }
+      setStarted(true);
+      setCameraReady(true);
     }
   };
 
   const takePhoto = useCallback(() => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
+    if (!videoRef.current || !cameraReady) return;
 
     // Flash effect
     setFlash(true);
     setTimeout(() => setFlash(false), 300);
 
+    const video = videoRef.current;
+    const vw = video.videoWidth || 640;
+    const vh = video.videoHeight || 480;
+
     // Composite to canvas
     const compositeCanvas = document.createElement('canvas');
-    compositeCanvas.width = video.videoWidth || 640;
-    compositeCanvas.height = video.videoHeight || 480;
+    compositeCanvas.width = vw;
+    compositeCanvas.height = vh;
     const ctx = compositeCanvas.getContext('2d');
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0, compositeCanvas.width, compositeCanvas.height);
 
-    // If star canvas has content, draw it on top
+    // Mirror the image (since front camera is mirrored)
+    ctx.translate(vw, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, vw, vh);
+
+    // If star canvas has content, draw it on top (at same dimensions)
     if (starCanvasRef.current) {
-      ctx.drawImage(starCanvasRef.current, 0, 0, compositeCanvas.width, compositeCanvas.height);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+      ctx.drawImage(starCanvasRef.current, 0, 0, vw, vh);
     }
 
     // Download
@@ -114,7 +170,7 @@ export default function Camera({ onBack }: CameraProps) {
     link.download = `birthday-photo-${Date.now()}.png`;
     link.href = compositeCanvas.toDataURL('image/png');
     link.click();
-  }, []);
+  }, [cameraReady]);
 
   const fireworkOnCamera = useCallback(() => {
     confetti({
@@ -141,7 +197,10 @@ export default function Camera({ onBack }: CameraProps) {
 
       {/* Header */}
       <div className="absolute top-0 left-0 z-20 p-4">
-        <button onClick={onBack} className="text-cream/70 hover:text-cream min-h-[44px] min-w-[44px] flex items-center">
+        <button
+          onClick={onBack}
+          className="text-cream/70 hover:text-cream min-h-[44px] min-w-[44px] flex items-center"
+        >
           <ArrowLeft size={24} />
         </button>
       </div>
@@ -167,42 +226,50 @@ export default function Camera({ onBack }: CameraProps) {
           <div className="w-64 h-64 rounded-2xl bg-gradient-to-br from-warm-yellow/10 to-soft-pink/10 border border-warm-yellow/20 flex items-center justify-center">
             <span className="text-6xl animate-breathe">⭐</span>
           </div>
+          <button
+            onClick={startCamera}
+            className="star-btn bg-transparent text-cream/70 px-6 py-3 rounded-full font-semibold border border-cream/20 mt-2 min-h-[44px]"
+          >
+            重试
+          </button>
         </div>
       ) : (
-        <div className="relative w-full max-w-lg mx-auto">
+        <div className="relative w-full max-w-lg mx-auto px-4">
           {/* Video */}
           <video
             ref={videoRef}
             playsInline
             muted
-            className="w-full object-cover camera-frame"
+            className="w-full object-cover camera-frame rounded-2xl"
             style={{ transform: 'scaleX(-1)', aspectRatio: '4/3' }}
           />
 
           {/* Star overlay */}
           <canvas
             ref={starCanvasRef}
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="absolute inset-0 w-full h-full pointer-events-none rounded-2xl"
             style={{ zIndex: 2 }}
             width={400}
             height={300}
           />
 
           {/* Buttons */}
-          <div className="flex justify-center gap-4 mt-6">
-            <button
-              onClick={takePhoto}
-              className="star-btn bg-cream text-night-start px-6 py-3 rounded-full font-semibold flex items-center gap-2 min-h-[44px]"
-            >
-              <CameraIcon size={20} /> 拍照
-            </button>
-            <button
-              onClick={fireworkOnCamera}
-              className="star-btn bg-soft-pink/80 text-night-start px-6 py-3 rounded-full font-semibold flex items-center gap-2 min-h-[44px]"
-            >
-              <Zap size={20} /> 放烟花
-            </button>
-          </div>
+          {cameraReady && (
+            <div className="flex justify-center gap-4 mt-6">
+              <button
+                onClick={takePhoto}
+                className="star-btn bg-cream text-night-start px-6 py-3 rounded-full font-semibold flex items-center gap-2 min-h-[44px]"
+              >
+                <CameraIcon size={20} /> 拍照
+              </button>
+              <button
+                onClick={fireworkOnCamera}
+                className="star-btn bg-soft-pink/80 text-night-start px-6 py-3 rounded-full font-semibold flex items-center gap-2 min-h-[44px]"
+              >
+                <Zap size={20} /> 放烟花
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -10,8 +10,6 @@ import Fireworks from './pages/Fireworks';
 import Camera from './pages/Camera';
 import Final from './pages/Final';
 import MusicPlayer from './components/MusicPlayer';
-import StarDoubleClick from './components/StarDoubleClick';
-import { content } from './data/content';
 
 type Page =
   | 'lock'
@@ -81,9 +79,6 @@ function App() {
 
       {/* Global: Music player (hidden on lock screen) */}
       <MusicPlayer />
-
-      {/* Global: Double-click star easter egg */}
-      <StarDoubleClick starMainSrc={content.starMain} />
     </>
   );
 }

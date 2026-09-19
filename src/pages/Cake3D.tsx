@@ -1,15 +1,53 @@
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Component, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Flame, Mic } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Flame, Mic, Loader2 } from 'lucide-react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
+import { OrbitControls, Environment, ContactShadows, useGLTF, useProgress, Html } from '@react-three/drei';
 import confetti from 'canvas-confetti';
 import * as THREE from 'three';
 import type { Group } from 'three';
 
+const MODEL_URL = `${import.meta.env.BASE_URL}models/cake.glb`;
+
 interface Cake3DProps {
   onBack: () => void;
   onNext: () => void;
+}
+
+// ──── ErrorBoundary (inside R3F Canvas) ────
+class ErrBnd extends Component<
+  { fallback: React.ReactNode; children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { fallback: React.ReactNode; children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return <>{this.props.fallback}</>;
+    return <>{this.props.children}</>;
+  }
+}
+
+// ──── GLB Cake Model ────
+function CakeModel({ url, blown }: { url: string; blown: boolean }) {
+  const gltf = useGLTF(url);
+  const groupRef = useRef<Group>(null!);
+
+  useFrame((_, delta) => {
+    if (groupRef.current && !blown) {
+      groupRef.current.rotation.y += delta * 0.5;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <primitive object={gltf.scene.clone()} />
+    </group>
+  );
 }
 
 // ──── Fallback 3D Cake ────
@@ -24,7 +62,6 @@ function FallbackCake({ blown }: { blown: boolean }) {
 
   return (
     <group ref={groupRef}>
-      {/* Layers */}
       <mesh position={[0, -0.15, 0]}>
         <cylinderGeometry args={[1.0, 1.05, 0.4, 32]} />
         <meshStandardMaterial color="#FFB3C1" roughness={0.35} metalness={0.05} />
@@ -37,7 +74,6 @@ function FallbackCake({ blown }: { blown: boolean }) {
         <cylinderGeometry args={[0.62, 0.68, 0.3, 32]} />
         <meshStandardMaterial color="#FFB3C1" roughness={0.35} metalness={0.05} />
       </mesh>
-      {/* Frosting */}
       {Array.from({ length: 8 }).map((_, i) => {
         const angle = (i / 8) * Math.PI * 2;
         return (
@@ -47,7 +83,6 @@ function FallbackCake({ blown }: { blown: boolean }) {
           </mesh>
         );
       })}
-      {/* Candle */}
       {!blown && (
         <group position={[0, 0.8, 0]}>
           <mesh>
@@ -61,6 +96,30 @@ function FallbackCake({ blown }: { blown: boolean }) {
         </group>
       )}
     </group>
+  );
+}
+
+// ──── Loading progress bar (HTML overlay inside Canvas) ────
+function LoadingBar() {
+  const { progress, active } = useProgress();
+
+  if (!active) return null;
+
+  return (
+    <Html center>
+      <div className="flex flex-col items-center gap-3 pointer-events-none">
+        <Loader2 size={28} className="text-warm-yellow animate-spin" />
+        <div className="w-48 h-2 bg-white/10 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-warm-yellow to-soft-pink rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        <p className="text-cream/60 text-xs">{progress.toFixed(0)}%</p>
+      </div>
+    </Html>
   );
 }
 
@@ -116,19 +175,46 @@ function StarConfetti({ active }: { active: boolean }) {
   );
 }
 
+// ──── 3D Scene content ────
+function Scene3D({ blown }: { blown: boolean }) {
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 5, 5]} intensity={0.8} color="#FFF8E7" />
+      <directionalLight position={[-3, 2, -3]} intensity={0.3} color="#FFB3C1" />
+      <pointLight position={[0, 1.5, 0]} intensity={0.6} color="#FFD966" />
+
+      {/* Loading indicator */}
+      <LoadingBar />
+
+      {/* Model: try GLB first, fall back on error */}
+      <Suspense fallback={<FallbackCake blown={blown} />}>
+        <ErrBnd fallback={<FallbackCake blown={blown} />}>
+          <CakeModel url={MODEL_URL} blown={blown} />
+        </ErrBnd>
+      </Suspense>
+
+      <StarConfetti active={blown} />
+      <OrbitControls
+        enableZoom={true}
+        enablePan={false}
+        minDistance={2}
+        maxDistance={6}
+        autoRotate={!blown}
+        autoRotateSpeed={1.5}
+        target={[0, 0.2, 0]}
+      />
+      <Environment preset="night" />
+      <ContactShadows position={[0, -1, 0]} opacity={0.4} scale={5} blur={2.5} />
+    </>
+  );
+}
+
 // ──── Main Cake Page ────
 export default function Cake3D({ onBack, onNext }: Cake3DProps) {
   const [blown, setBlown] = useState(false);
   const [micSupported, setMicSupported] = useState(false);
   const [micActive, setMicActive] = useState(false);
-  const [modelMissing, setModelMissing] = useState(false);
-
-  // Check if cake.glb exists
-  useEffect(() => {
-    fetch('/models/cake.glb', { method: 'HEAD' })
-      .then(r => { if (!r.ok) setModelMissing(true); })
-      .catch(() => setModelMissing(true));
-  }, []);
 
   // Check mic
   useEffect(() => {
@@ -136,9 +222,11 @@ export default function Cake3D({ onBack, onNext }: Cake3DProps) {
       try {
         if (!navigator?.mediaDevices?.getUserMedia) return;
         const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-        s.getTracks().forEach(t => t.stop());
+        s.getTracks().forEach((t) => t.stop());
         setMicSupported(true);
-      } catch { /* not supported */ }
+      } catch {
+        /* not supported */
+      }
     };
     check();
   }, []);
@@ -181,7 +269,7 @@ export default function Cake3D({ onBack, onNext }: Cake3DProps) {
         const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
         if (avg > 45 && !blown) {
           blowCandle();
-          stream.getTracks().forEach(t => t.stop());
+          stream.getTracks().forEach((t) => t.stop());
           audioCtx.close();
           setMicActive(false);
           return;
@@ -190,49 +278,34 @@ export default function Cake3D({ onBack, onNext }: Cake3DProps) {
       };
       checkBlow();
       setTimeout(() => {
-        if (!blown) { stream.getTracks().forEach(t => t.stop()); audioCtx.close(); setMicActive(false); }
+        if (!blown) {
+          stream.getTracks().forEach((t) => t.stop());
+          audioCtx.close();
+          setMicActive(false);
+        }
       }, 30000);
-    } catch { setMicActive(false); setMicSupported(false); }
+    } catch {
+      setMicActive(false);
+      setMicSupported(false);
+    }
   };
 
   return (
     <div className="relative min-h-[100dvh] bg-gradient-to-b from-night-start to-night-end overflow-hidden">
       {/* Header */}
       <div className="absolute top-0 left-0 z-20 p-4">
-        <button onClick={onBack} className="text-cream/70 hover:text-cream min-h-[44px] min-w-[44px] flex items-center">
+        <button
+          onClick={onBack}
+          className="text-cream/70 hover:text-cream min-h-[44px] min-w-[44px] flex items-center"
+        >
           <ArrowLeft size={24} />
         </button>
       </div>
 
-      {/* Model missing hint */}
-      {modelMissing && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 text-cream/40 text-xs bg-black/30 px-3 py-1 rounded-full">
-          🎂 3D 蛋糕模型未放置，显示默认蛋糕
-        </div>
-      )}
-
       {/* 3D Scene */}
       <div className="absolute inset-0" style={{ zIndex: 0 }}>
         <Canvas camera={{ position: [0, 0.3, 3.5], fov: 45 }}>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[5, 5, 5]} intensity={0.8} color="#FFF8E7" />
-          <directionalLight position={[-3, 2, -3]} intensity={0.3} color="#FFB3C1" />
-          <pointLight position={[0, 1.5, 0]} intensity={0.6} color="#FFD966" />
-          <Suspense fallback={null}>
-            <FallbackCake blown={blown} />
-            <StarConfetti active={blown} />
-            <OrbitControls
-              enableZoom={true}
-              enablePan={false}
-              minDistance={2}
-              maxDistance={6}
-              autoRotate={!blown}
-              autoRotateSpeed={1.5}
-              target={[0, 0.2, 0]}
-            />
-            <Environment preset="night" />
-            <ContactShadows position={[0, -1, 0]} opacity={0.4} scale={5} blur={2.5} />
-          </Suspense>
+          <Scene3D blown={blown} />
         </Canvas>
       </div>
 
@@ -251,7 +324,9 @@ export default function Cake3D({ onBack, onNext }: Cake3DProps) {
                 onClick={startMic}
                 disabled={micActive}
                 className={`star-btn px-6 py-3 rounded-full font-semibold flex items-center gap-2 min-h-[44px] border ${
-                  micActive ? 'bg-warm-yellow/10 text-warm-yellow border-warm-yellow/30' : 'bg-transparent text-cream/70 border-cream/20'
+                  micActive
+                    ? 'bg-warm-yellow/10 text-warm-yellow border-warm-yellow/30'
+                    : 'bg-transparent text-cream/70 border-cream/20'
                 }`}
               >
                 <Mic size={20} /> {micActive ? '正在听...' : '吹气吹灭'}
@@ -259,7 +334,11 @@ export default function Cake3D({ onBack, onNext }: Cake3DProps) {
             )}
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center gap-6"
+          >
             <p className="text-2xl text-warm-yellow font-semibold">✨ 愿望已收到 ✨</p>
             <button
               onClick={onNext}

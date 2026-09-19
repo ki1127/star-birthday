@@ -23,7 +23,6 @@ export default function Welcome({ onNavigate }: WelcomeProps) {
   const [bgIndex, setBgIndex] = useState(0);
   const [bgError, setBgError] = useState(false);
   const [friendImgError, setFriendImgError] = useState(false);
-  const [starImgError, setStarImgError] = useState(false);
 
   // Background carousel
   useEffect(() => {
@@ -93,23 +92,9 @@ export default function Welcome({ onNavigate }: WelcomeProps) {
             )}
           </div>
 
-          {/* Star character */}
-          <div className="breathe sway">
-            {starImgError ? (
-              <div
-                className="rounded-full img-fallback flex items-center justify-center"
-                style={{ width: 80, height: 80 }}
-              >
-                <Star size={40} className="text-warm-yellow" />
-              </div>
-            ) : (
-              <img
-                src={content.starMain}
-                alt=""
-                className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-[0_0_20px_rgba(255,217,102,0.5)]"
-                onError={() => setStarImgError(true)}
-              />
-            )}
+          {/* Star character — decorative star icon */}
+          <div className="flex items-center justify-center w-20 h-20 md:w-24 md:h-24">
+            <Star size={40} className="text-warm-yellow twinkle" />
           </div>
         </motion.div>
 

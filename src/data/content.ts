@@ -1,6 +1,14 @@
 // ==================== 内容配置文件 ====================
 // 修改此文件即可更换所有文字和图片路径
 
+// Helper: prepend Vite base path to all asset URLs
+// In dev this is "/" — in production (GitHub Pages) it's "/star-birthday/"
+const BASE = import.meta.env.BASE_URL;
+
+function assetUrl(path: string): string {
+  return `${BASE}${path.replace(/^\//, '')}`;
+}
+
 export const content = {
   // --- 朋友信息 ---
   friendName: '薛小星',
@@ -17,7 +25,7 @@ export const content = {
   // --- 首页 ---
   mainTitle: '生日快乐！',
   subTitle: '今天你是主角 🎂',
-  friendPhoto: '/images/friend/friend-main.jpg', // 大头照
+  friendPhoto: assetUrl('/images/friend/friend-main.jpg'), // 大头照
 
   // --- 祝福信 ---
   letter: `亲爱的薛小星：
@@ -62,57 +70,57 @@ export const content = {
 
   // --- 合照（couple 文件夹）---
   couplePhotos: [
-    { src: '/images/couple/couple-01.jpg', caption: '' },
-    { src: '/images/couple/couple-02.jpg', caption: '' },
-    { src: '/images/couple/couple-03.jpg', caption: '' },
-    { src: '/images/couple/couple-04.jpg', caption: '' },
-    { src: '/images/couple/couple-05.jpg', caption: '' },
+    { src: assetUrl('/images/couple/couple-01.jpg'), caption: '' },
+    { src: assetUrl('/images/couple/couple-02.jpg'), caption: '' },
+    { src: assetUrl('/images/couple/couple-03.jpg'), caption: '' },
+    { src: assetUrl('/images/couple/couple-04.jpg'), caption: '' },
+    { src: assetUrl('/images/couple/couple-05.jpg'), caption: '' },
   ],
 
   // --- 班级照片（class 文件夹）---
   classPhotos: [
-    { src: '/images/class/class-01.jpg', caption: '' },
-    { src: '/images/class/class-02.jpg', caption: '' },
-    { src: '/images/class/class-03.jpg', caption: '' },
-    { src: '/images/class/class-04.jpg', caption: '' },
+    { src: assetUrl('/images/class/class-01.jpg'), caption: '' },
+    { src: assetUrl('/images/class/class-02.jpg'), caption: '' },
+    { src: assetUrl('/images/class/class-03.jpg'), caption: '' },
+    { src: assetUrl('/images/class/class-04.jpg'), caption: '' },
   ],
 
   // --- 学校照片（school 文件夹）---
   schoolPhotos: [
-    { src: '/images/school/school-01.jpg', caption: '' },
-    { src: '/images/school/school-02.jpg', caption: '' },
-    { src: '/images/school/school-03.jpg', caption: '' },
-    { src: '/images/school/school-04.jpg', caption: '' },
-    { src: '/images/school/school-05.jpg', caption: '' },
+    { src: assetUrl('/images/school/school-01.jpg'), caption: '' },
+    { src: assetUrl('/images/school/school-02.jpg'), caption: '' },
+    { src: assetUrl('/images/school/school-03.jpg'), caption: '' },
+    { src: assetUrl('/images/school/school-04.jpg'), caption: '' },
+    { src: assetUrl('/images/school/school-05.jpg'), caption: '' },
   ],
 
   // --- 初雪照片（day 文件夹）---
   dayPhotos: [
-    { src: '/images/day/day-01.jpg', caption: '' },
-    { src: '/images/day/day-02.jpg', caption: '' },
-    { src: '/images/day/day-03.jpg', caption: '' },
-    { src: '/images/day/day-04.jpg', caption: '' },
-    { src: '/images/day/day-05.jpg', caption: '' },
-    { src: '/images/day/day-06.jpg', caption: '' },
-    { src: '/images/day/day-07.jpg', caption: '' },
-    { src: '/images/day/day-08.jpg', caption: '' },
-    { src: '/images/day/day-09.jpg', caption: '' },
+    { src: assetUrl('/images/day/day-01.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-02.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-03.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-04.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-05.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-06.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-07.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-08.jpg'), caption: '' },
+    { src: assetUrl('/images/day/day-09.jpg'), caption: '' },
   ],
 
   // --- 背景图 ---
   backgrounds: [
-    '/images/backgrounds/bg-1.jpg',
-    '/images/backgrounds/bg-2.jpg',
-    '/images/backgrounds/bg-3.jpg',
+    assetUrl('/images/backgrounds/bg-1.jpg'),
+    assetUrl('/images/backgrounds/bg-2.jpg'),
+    assetUrl('/images/backgrounds/bg-3.jpg'),
   ],
 
   // --- 星星人图片（用户自己放入 public/images/star/）---
-  starMain: '/images/star/star-main.png',
-  starSticker: '/images/star/star-sticker-01.png',
-  starFrame: '/images/star/star-frame.png',
+  starMain: assetUrl('/images/star/star-main.png'),
+  starSticker: assetUrl('/images/star/star-sticker-01.png'),
+  starFrame: assetUrl('/images/star/star-frame.png'),
 
   // --- 音乐 ---
-  music: '/music/birthday.mp3',
+  music: assetUrl('/music/birthday.mp3'),
 };
 
 export type PhotoItem = { src: string; caption: string };

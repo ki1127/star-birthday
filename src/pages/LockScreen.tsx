@@ -46,7 +46,7 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
           {/* Background: bg-1.jpg - subtle blur, higher opacity */}
           <div className="absolute inset-0 opacity-40">
             <img
-              src="/images/backgrounds/bg-1.jpg"
+              src={content.backgrounds[0]}
               alt=""
               className="w-full h-full object-cover"
               style={{ filter: 'blur(2px) brightness(0.6)' }}
