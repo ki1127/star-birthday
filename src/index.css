@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+@theme {
+  --color-warm-yellow: #FFD966;
+  --color-soft-pink: #FFB3C1;
+  --color-cream: #FFF8E7;
+  --color-night-start: #1C1B2E;
+  --color-night-end: #2A1F3D;
+  --color-snow-blue: #D6E8F5;
+  --color-snow-white: #FFFFFF;
+  --color-lock-gold: #E8B84B;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #1C1B2E 0%, #2A1F3D 100%);
+  color: #FFF8E7;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 217, 102, 0.3);
+  border-radius: 2px;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 217, 102, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(255, 217, 102, 0.6); }
+}
+@keyframes flame-flicker {
+  0%, 100% { transform: scale(1, 1) rotate(-2deg); }
+  25% { transform: scale(1.05, 0.95) rotate(0deg); }
+  50% { transform: scale(0.95, 1.05) rotate(2deg); }
+  75% { transform: scale(1.02, 0.98) rotate(-1deg); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.breathe { animation: breathe 3s ease-in-out infinite; }
+.sway { animation: sway 4s ease-in-out infinite; }
+.glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+.flame-flicker { animation: flame-flicker 0.5s ease-in-out infinite; }
+.twinkle { animation: twinkle 2s ease-in-out infinite; }
+
+.frost-text {
+  text-shadow: 0 0 10px rgba(214,232,245,0.6), 0 0 20px rgba(214,232,245,0.3), 0 1px 2px rgba(255,255,255,0.4);
+  color: #D6E8F5;
+}
+
+.star-btn {
+  transition: all 0.3s ease;
+}
+.star-btn:hover {
+  box-shadow: 0 0 20px rgba(255,217,102,0.5), 0 0 40px rgba(255,179,193,0.3);
+  transform: translateY(-2px);
+}
+
+.img-fallback {
+  background: linear-gradient(135deg, #FFD966 0%, #FFB3C1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1C1B2E;
+  font-size: 14px;
+  text-align: center;
+  padding: 10px;
+}
+
+.lock-input {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,217,102,0.4);
+  color: #FFF8E7;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+}
+.lock-input:focus {
+  border-color: #FFD966;
+  box-shadow: 0 0 15px rgba(255,217,102,0.3);
+}
+.lock-input::placeholder {
+  color: rgba(255,248,231,0.4);
+}
+
+.album-thumb {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+.album-thumb:hover, .album-thumb.active {
+  border-color: #FFD966;
+  box-shadow: 0 0 10px rgba(255,217,102,0.4);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.camera-frame {
+  border: 3px solid rgba(255,217,102,0.5);
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(255,217,102,0.2);
+}
+
+.moon {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 60% 40%, rgba(255,240,180,0.9), rgba(255,217,102,0.3));
+  box-shadow: 0 0 60px rgba(255,217,102,0.3), 0 0 120px rgba(255,217,102,0.1);
+}
+
+.music-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,217,102,0.2);
+  border: 1px solid rgba(255,217,102,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #FFF8E7;
+}
+.music-btn:hover {
+  background: rgba(255,217,102,0.4);
+  box-shadow: 0 0 15px rgba(255,217,102,0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
