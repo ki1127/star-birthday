@@ -43,12 +43,14 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
         >
           <StarField count={50} />
 
-          {/* Background: bg-1.jpg with blur */}
-          <div className="absolute inset-0 opacity-25">
+          {/* Background: bg-1.jpg - subtle blur, higher opacity */}
+          <div className="absolute inset-0 opacity-40">
             <img
               src="/images/backgrounds/bg-1.jpg"
               alt=""
-              className="w-full h-full object-cover blur-md"
+              className="w-full h-full object-cover"
+              style={{ filter: 'blur(2px) brightness(0.6)' }}
+              loading="eager"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           </div>
@@ -73,6 +75,7 @@ export default function LockScreen({ onUnlock }: LockScreenProps) {
                   src={content.friendPhoto}
                   alt=""
                   className="w-full h-full object-cover"
+                  loading="eager"
                   onError={(e) => {
                     const el = e.target as HTMLImageElement;
                     el.style.display = 'none';

@@ -13,7 +13,6 @@ export default function Letter({ onBack, onNext }: LetterProps) {
   const [typed, setTyped] = useState('');
   const [typing, setTyping] = useState(true);
   const [starCount, setStarCount] = useState(0);
-  const [starImgError, setStarImgError] = useState(false);
 
   // Typewriter with star triggers
   useEffect(() => {
@@ -69,32 +68,6 @@ export default function Letter({ onBack, onNext }: LetterProps) {
       {/* Letter */}
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="relative bg-gradient-to-br from-warm-yellow/10 via-cream/5 to-soft-pink/10 rounded-2xl p-8 md:p-12 border border-warm-yellow/20 shadow-lg">
-          {/* Star sticker decoration */}
-          <div className="absolute -top-4 -right-4 w-16 h-16 breathe">
-            {starImgError ? (
-              <Star size={64} className="text-warm-yellow" />
-            ) : (
-              <img
-                src={content.starSticker}
-                alt=""
-                className="w-full h-full object-contain"
-                onError={() => setStarImgError(true)}
-              />
-            )}
-          </div>
-          <div className="absolute -bottom-3 -left-3 w-12 h-12 breathe" style={{ animationDelay: '1s' }}>
-            {starImgError ? (
-              <Star size={48} className="text-warm-yellow" />
-            ) : (
-              <img
-                src={content.starSticker}
-                alt=""
-                className="w-full h-full object-contain"
-                onError={() => setStarImgError(true)}
-              />
-            )}
-          </div>
-
           {/* Stars earned */}
           <div className="flex gap-1 mb-6">
             {Array.from({ length: Math.min(starCount, 8) }).map((_, i) => (
@@ -109,8 +82,11 @@ export default function Letter({ onBack, onNext }: LetterProps) {
             ))}
           </div>
 
-          {/* Letter text */}
-          <div className="text-cream/80 leading-relaxed text-base md:text-lg whitespace-pre-line font-serif">
+          {/* Letter text - using 楷体 */}
+          <div
+            className="text-cream/85 leading-loose text-base md:text-lg whitespace-pre-line"
+            style={{ fontFamily: "'FZKaiTi', 'KaiTi', serif", lineHeight: 2.2 }}
+          >
             {typed}
             {typing && <span className="animate-pulse text-warm-yellow">|</span>}
           </div>

@@ -4,30 +4,41 @@ import { content } from '../data/content';
 
 export default function MusicPlayer() {
   const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    const audio = new Audio(content.music);
+    const audio = new Audio();
     audio.loop = true;
     audio.preload = 'auto';
+    audio.volume = 0.7;
     audioRef.current = audio;
-    audio.addEventListener('error', () => setHasError(true));
+
+    const onCanPlay = () => setLoading(false);
+    const onError = () => setHasError(true);
+    audio.addEventListener('canplaythrough', onCanPlay);
+    audio.addEventListener('error', onError);
+    audio.src = content.music;
+    audio.load();
+
     return () => {
       audio.pause();
+      audio.removeEventListener('canplaythrough', onCanPlay);
+      audio.removeEventListener('error', onError);
       audio.remove();
     };
   }, []);
 
   const toggle = useCallback(() => {
-    if (!audioRef.current || hasError) return;
+    if (!audioRef.current || hasError || loading) return;
     if (playing) {
       audioRef.current.pause();
+      setPlaying(false);
     } else {
-      audioRef.current.play().catch(() => setHasError(true));
+      audioRef.current.play().then(() => setPlaying(true)).catch(() => setHasError(true));
     }
-    setPlaying(!playing);
-  }, [playing, hasError]);
+  }, [playing, hasError, loading]);
 
   if (hasError) return null;
 

@@ -53,8 +53,8 @@ export default function Welcome({ onNavigate }: WelcomeProps) {
             key={bgIndex}
             src={content.backgrounds[bgIndex]}
             alt=""
-            className="w-full h-full object-cover blur-sm scale-105"
-            style={{ filter: 'blur(4px) brightness(0.4)' }}
+            className="w-full h-full object-cover scale-105"
+            style={{ filter: 'blur(1px) brightness(0.5)' }}
             onError={() => setBgError(true)}
           />
         )}

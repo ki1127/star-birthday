@@ -5,7 +5,7 @@ import Welcome from './pages/Welcome';
 import Memories from './pages/Memories';
 import Day from './pages/Day';
 import Letter from './pages/Letter';
-import Cake from './pages/Cake';
+import Cake3D from './pages/Cake3D';
 import Fireworks from './pages/Fireworks';
 import Camera from './pages/Camera';
 import Final from './pages/Final';
@@ -65,7 +65,7 @@ function App() {
             <Letter onBack={() => setPage('welcome')} onNext={() => setPage('cake')} />
           )}
           {page === 'cake' && (
-            <Cake onBack={() => setPage('welcome')} onNext={() => setPage('fireworks')} />
+            <Cake3D onBack={() => setPage('welcome')} onNext={() => setPage('fireworks')} />
           )}
           {page === 'fireworks' && (
             <Fireworks

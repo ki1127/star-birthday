@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/* Custom fonts */
+@font-face {
+  font-family: 'FZKaiTi';
+  src: url('/fonts/fzkaiti.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HennyPenny';
+  src: url('/fonts/henny-penny.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DTNightingale';
+  src: url('/fonts/dt-nightingale.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Monsieur';
+  src: url('/fonts/monsieur.ttf') format('truetype');
+  font-display: swap;
+}
+
 @theme {
   --color-warm-yellow: #FFD966;
   --color-soft-pink: #FFB3C1;
@@ -23,7 +45,7 @@ html {
 }
 
 body {
-  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: 'FZKaiTi', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', serif;
   background: linear-gradient(180deg, #1C1B2E 0%, #2A1F3D 100%);
   color: #FFF8E7;
   overflow-x: hidden;
